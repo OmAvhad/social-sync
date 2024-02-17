@@ -2,33 +2,34 @@ const { get } = require('http');
 const HandleConfig = require('../models/handleConfigModel');
 const { authorizationUrl, getToken } = require('../utils/googleClient');
 const User = require('../models/userModel');
-const handleConfigModel = require('../models/handleConfigModel');
 
 // Youtube
 const generateYTAuthURL = async (req, res) => {
     const { id } = req.params;
     const user = await User.findById(id);
-    const handle = await HandleConfig.create({ userId: user, serviceName: "youtube" });
-    // put the id in the session
+    const handle = await HandleConfig.findOne({ userId: user, serviceName: "youtube" });
+    if (handle) {
+        return res.status(400).json({ message: "User already authenticated" });
+    }
+    await HandleConfig.create({ userId: user, serviceName: "youtube" });
+
     req.session.userId = id;
     res.json({ authorizationUrl });
 }
 
 const ytCallBack = async (req, res) => {
     const userId = req.session.userId;
-
-    try{
-        const user = await User.findById(userId);
-    } catch (e) {
-        res.status(400).json(e.message);
-    }
-
     const { code } = req.query;
 
     try {
         let { tokens } = await getToken(code);
         // oauth2Client.setCredentials(tokens);
         try {
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+
             console.log("tokens", tokens);
             await HandleConfig.findOneAndUpdate(
                 { serviceName: "youtube", userId: userId },
@@ -40,8 +41,6 @@ const ytCallBack = async (req, res) => {
                 refreshToken: tokens.refresh_token,
                 userId: user
             });
-            // fs.writeFileSync("creds.json", JSON.stringify(tokens));
-            // authed = true;
         } catch (error) {
             res.status(400).json(error.message);
         }

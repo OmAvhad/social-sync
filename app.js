@@ -1,11 +1,17 @@
 const express = require('express');
+const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require("cors")
+
 require('dotenv').config();
 
 const app = express();
 app.use(cors())
-
+app.use(session({
+    secret: 'your-secret-key', // Replace 'your-secret-key' with a random string used to sign the session ID cookie
+    resave: false,
+    saveUninitialized: false
+}));
 const port = 3000;
 
 // Connect to MongoDB Atlas
