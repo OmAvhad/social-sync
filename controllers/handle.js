@@ -8,10 +8,9 @@ const generateYTAuthURL = async (req, res) => {
     const { id } = req.params;
     const user = await User.findById(id);
     const handle = await HandleConfig.findOne({ userId: user, serviceName: "youtube" });
-    if (handle) {
-        return res.status(400).json({ message: "User already authenticated" });
+    if (!handle) {
+        await HandleConfig.create({ userId: user, serviceName: "youtube" });
     }
-    await HandleConfig.create({ userId: user, serviceName: "youtube" });
 
     req.session.userId = id;
     res.json({ authorizationUrl });
@@ -23,16 +22,15 @@ const ytCallBack = async (req, res) => {
 
     try {
         let { tokens } = await getToken(code);
+        console.log("tokens", tokens);
         // oauth2Client.setCredentials(tokens);
         try {
             const user = await User.findById(userId);
             if (!user) {
                 return res.status(400).json({ message: "User not found" });
             }
-
             console.log("tokens", tokens);
-            await HandleConfig.findOneAndUpdate(
-                { serviceName: "youtube", userId: userId },
+            await HandleConfig.create(
                 {
                 serviceName: "youtube",
                 clientId: tokens.client_id,
