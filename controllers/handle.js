@@ -19,7 +19,7 @@ const generateYTAuthURL = async (req, res) => {
 const ytCallBack = async (req, res) => {
     const userId = req.session.userId;
     const { code } = req.query;
-
+    console.log("code", code);
     try {
         let { tokens } = await getToken(code);
         console.log("tokens", tokens);
@@ -40,11 +40,11 @@ const ytCallBack = async (req, res) => {
                 userId: user
             });
         } catch (error) {
-            res.status(400).json(error.message);
+            return res.status(400).json(error.message);
         }
-        res.status(200).json({ message: "Authentication Successfull" });
+        return res.status(200).json({ message: "Authentication Successfull" });
     } catch (e) {
-        res.status(500).json(e.message);
+        return res.status(500).json(e.message);
     }
 }
 

@@ -22,7 +22,9 @@ const authorizationUrl = oauth2Client.generateAuthUrl({
 });
 
 const getToken = async (code) => {
+  console.log("code", code);
     const { tokens } = await oauth2Client.getToken(code);
+    console.log("tokens", tokens);
     return tokens;
 }
 
