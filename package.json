@@ -1,0 +1,25 @@
+{
+  "name": "social-sync",
+  "version": "1.0.0",
+  "description": "One Hub Infinite Reach",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "dev": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.7",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.4",
+    "express": "^4.18.2",
+    "googleapis": "^133.0.0",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.1.3",
+    "nodemailer": "^6.9.9",
+    "nodemon": "^3.0.3"
+  }
+}
