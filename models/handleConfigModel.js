@@ -19,6 +19,10 @@ const handleConfigSchema = new mongoose.Schema({
     refreshToken: {
         type: String
     },
+    userId: { // user id from the user model
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
 });
 
 module.exports = mongoose.model('HandleConfig', handleConfigSchema);

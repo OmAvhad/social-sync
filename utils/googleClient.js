@@ -21,10 +21,9 @@ const authorizationUrl = oauth2Client.generateAuthUrl({
   include_granted_scopes: true
 });
 
-
 const getToken = async (code) => {
     const { tokens } = await oauth2Client.getToken(code);
     return tokens;
 }
 
-module.exports = { authorizationUrl };
+module.exports = { authorizationUrl, getToken };
