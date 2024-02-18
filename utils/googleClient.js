@@ -9,6 +9,9 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 const scopes = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'openid',
     'https://www.googleapis.com/auth/youtube.readonly',
     'https://www.googleapis.com/auth/youtube',
     'https://www.googleapis.com/auth/youtube.force-ssl',
@@ -16,16 +19,25 @@ const scopes = [
 ];
 
 const authorizationUrl = oauth2Client.generateAuthUrl({
-  access_type: 'offline',
   scope: scopes,
+  access_type: 'offline',
   include_granted_scopes: true
 });
 
 const getToken = async (code) => {
-  console.log("code", code);
-    const { tokens } = await oauth2Client.getToken(code);
-    console.log("tokens", tokens);
-    return tokens;
+  const { tokens } = await oauth2Client.getToken(code);
+  console.log("tokens", tokens);
+  return tokens;
 }
 
-module.exports = { authorizationUrl, getToken };
+const setOAuth = async (tokens) => {
+  try {
+    oauth2Client.setCredentials(tokens);
+    return oauth2Client;
+  } catch (error) {
+    console.log("error", error);
+    throw error;
+  }
+}
+
+module.exports = { authorizationUrl, getToken, setOAuth };
