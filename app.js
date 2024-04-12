@@ -3,17 +3,18 @@ const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require("cors");
 const path = require('path');
+const ejs = require('ejs');
 
 require('dotenv').config();
 
 const app = express();
+app.set('view engine', 'ejs');
 app.use(cors())
 app.use(session({
     secret: 'your-secret-key', // Replace 'your-secret-key' with a random string used to sign the session ID cookie
     resave: false,
     saveUninitialized: false
 }));
-app.use(express.static(path.join(__dirname, 'public')));
 const port = 3000;
 
 // Connect to MongoDB Atlas
@@ -39,7 +40,7 @@ const mainRouter = require('./routes/routes');
 app.use('/', mainRouter);
 
 app.get('/fb', (req, res) => {
-	res.sendFile('test.html');
+	res.render('test');
 });	
 
 // Start the server
