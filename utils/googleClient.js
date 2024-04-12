@@ -40,4 +40,15 @@ const setOAuth = async (tokens) => {
   }
 }
 
-module.exports = { authorizationUrl, getToken, setOAuth };
+// Create OAuth2 client
+const createOAuth = async (accessToken, refreshToken) => {
+  const oauth2Client = await setOAuth({
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+  });
+  return oauth2Client;
+}
+
+module.exports = { authorizationUrl, getToken, setOAuth, createOAuth };

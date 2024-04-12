@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { type } = require('os');
 
+// Social Media Handles Config Schema
 const handleConfigSchema = new mongoose.Schema({
     serviceName: {  // youtube, instagram, facebook, twitter
         type: String,

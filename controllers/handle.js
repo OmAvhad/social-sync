@@ -1,12 +1,11 @@
-const { get } = require('http');
-const HandleConfig = require('../models/handleConfigModel');
-const { authorizationUrl, getToken, setOAuth } = require('../utils/googleClient');
-const User = require('../models/userModel');
-const { google } = require('googleapis');
-require('dotenv').config();
-// https://a5ff-103-137-94-215.ngrok-free.app/generate-yt-auth/65d0bab01024462089dedceb
 
-// Youtube
+const HandleConfig = require('../models/handleConfigModel');
+const { authorizationUrl, getToken, setOAuth, createOAuth } = require('../utils/googleClient');
+const { createYoutubeClient, channelList, playlistList, playlistItemsList } = require('../utils/youtube');
+const User = require('../models/userModel');
+require('dotenv').config();
+
+// Generate URL for youtube authentication
 const generateYTAuthURL = async (req, res) => {
     const user = req.user;
 
@@ -20,6 +19,7 @@ const generateYTAuthURL = async (req, res) => {
     return res.redirect(authorizationUrl);
 }
 
+// Callback function for youtube authentication
 const ytCallBack = async (req, res) => {
     const userId = req.session.userId;
     const { code } = req.query;
@@ -56,47 +56,32 @@ const ytCallBack = async (req, res) => {
     }
 }
 
+
 const getYT = async (req, res) => {
     const user = req.user;
     const handle = await HandleConfig.findOne({ userId: user, serviceName: "youtube" });
     if (!handle) {
         return res.status(400).json({ message: "Youtube not connected" });
     }
-
-    const oauth2Client = await setOAuth({
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        access_token: handle.accessToken,
-        refresh_token: handle.refreshToken,
-    });
-
-    const youtube = google.youtube({
-        version: 'v3',
-        auth: oauth2Client
-    });
-
-    // user's channels
-    const channels = await youtube.channels.list({
-        part: 'snippet,contentDetails,statistics',
-        mine: true
-    });
-
-    const channel_id = channels.data.items[0].id;
-    // user's playlists
-    const playlists = await youtube.playlists.list({
-        part: 'snippet',
-        channelId: channel_id   
-    });
-    // user's videos
-    const playListItems = await youtube.playlistItems.list({
-        part: 'snippet',
-        playlistId: playlists.data.items[0].id
-    });
-    console.log("response", playListItems.data);
-
-    return res.status(200).json({ data: playListItems.data});
+    
+    const client = await createOAuth(handle.accessToken, handle.refreshToken);
+    const youtube = await createYoutubeClient(client);
+    const channels = await channelList(youtube);
+    const playlists = await playlistList(youtube, channels.data.items[0].id);
+    return res.status(200).json({ data: playlists });
 }
 
-exports.generateYTAuthURL = generateYTAuthURL;
-exports.ytCallBack = ytCallBack;
-exports.getYT = getYT;
+// Reterive all handles(social media accounts) of a user 
+const handles = async (req, res) => {
+    const user = req.user;
+    const handle = await HandleConfig.find({ userId: user }).select('_id serviceName');
+    return res.status(200).json({ data: handle });
+}
+
+
+module.exports = { 
+    generateYTAuthURL, 
+    ytCallBack, 
+    getYT, 
+    handles 
+};
