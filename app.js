@@ -94,14 +94,22 @@ const uploadtoFb = async(url, description)=> {
     });
 }
 
-const uploadtoInsta = async(url, description, img)=> {
-	 
-	const data = await ig.publish.photo({
-		file: img,
-		caption: description,
-	});
-	console.log("Uploaded to Instagram");
-	return data;
+const uploadtoInsta = async(url, description)=> {
+	try {
+
+		const mediaBuffer = await get({
+			url: url,
+			encoding: null,
+		});
+		const data = await ig.publish.photo({
+			file: mediaBuffer,
+			caption: description,
+		});
+		console.log("Uploaded to Instagram");
+		return data;
+	} catch (error) {
+		console.log(error);
+	}
 };
 
 app.post("/connect-instagram", async (req, res) => {
