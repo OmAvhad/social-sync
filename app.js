@@ -96,7 +96,6 @@ const uploadtoFb = async(url, description)=> {
 
 const uploadtoInsta = async(url, description)=> {
 	try {
-
 		const mediaBuffer = await get({
 			url: url,
 			encoding: null,
@@ -185,7 +184,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 			// upload to instagram
 			await uploadtoInsta(url, description, image.Buffer);
 
-			res.status(200).json({ message: "Image uploaded successfully", image: result });
+			return res.status(200).json({ message: "Image uploaded successfully", image: result });
 		});
 	} catch (error) {
 		console.error(error);
@@ -193,6 +192,19 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 	}
     
 });
+
+const username = 'mpr_123456';
+const password = 'abc@123';
+
+(async () => {
+  try {
+    await ig.state.generateDevice(username);
+    await ig.account.login(username, password);
+    console.log('Connected to Instagram successfully.');
+  } catch (error) {
+    console.error('Failed to connect to Instagram:', error);
+  }
+})();
 
 // Start the server
 const PORT = process.env.PORT || port;
