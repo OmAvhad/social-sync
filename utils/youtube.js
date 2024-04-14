@@ -37,6 +37,9 @@ const playlistItemsList = async (youtube, playlistId) => {
     return playlistItems;
 }
 
+// Upload photo to Youtube
+ 
+
 module.exports = { 
     createYoutubeClient,
     channelList,

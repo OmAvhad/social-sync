@@ -78,6 +78,7 @@ const handles = async (req, res) => {
     return res.status(200).json({ data: handle });
 }
 
+// }
 
 module.exports = { 
     generateYTAuthURL, 
