@@ -164,6 +164,7 @@ app.post("/upload-video", async (req, res) => {
 
 app.post('/upload', upload.single('image'), async (req, res) => {
 	try {
+		
 		const { description } = req.body;
 		if (!req.file) {
 			return res.status(400).json({ error: "Image file not provided" });
