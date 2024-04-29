@@ -1,6 +1,5 @@
 node_modules/
 dist/
 .env
-uploads/*.jpg
-uploads/*.jpeg
-uploads/*.png
+uploads/*
+!uploads/sample.txt # don't ignore sample.txt

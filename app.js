@@ -8,10 +8,11 @@ const { IgApiClient } = require('instagram-private-api');
 const multer = require('multer');
 const ig = new IgApiClient();
 const fs = require('fs');
+const { gemini } = require('./utils/utils');
+const axios = require('axios');
 
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
-// const { v2 } = require('cloudinary');
           
 cloudinary.config({ 
   cloud_name: 'dxah0hqjk', 
@@ -69,8 +70,6 @@ const { pathToFileURL } = require('url');
 FB.setAccessToken(process.env.FACEBOOK_ACCESS_TOKEN);
 
 const uploadtoFb = async(url, description)=> {
-	
-    console.log("ppp",url);
     FB.api(`/61558529695873/photos`, 'POST', 
     {
         // 'source': fs.createReadStream("PATH_TO_THE_LOCAL_FILE"),
@@ -88,10 +87,29 @@ const uploadtoFb = async(url, description)=> {
             console.log('error occurred: ')
             console.log(response.error)
         } else {
-            console.log('Uploaded to FB');
+			console.log('Uploaded to FB');
             // Step 2 : publish media
         }
     });
+}
+
+const uploadtoFbVideo = async(url, description)=> {
+	// use the graph-video api to upload the video
+	let config = {
+		method: 'post',
+		maxBodyLength: Infinity,
+		url: `https://graph-video.facebook.com/v19.0/269151736285799/videos?access_token=${process.env.FACEBOOK_ACCESS_TOKEN}&description=${description}&file_url=${url}`,
+	};
+	await axios.request(config)
+		.then((response) => {
+			console.log('Uploaded to FB');
+			return response.data;
+		})
+		.catch((error) => {
+			console.log(error);
+			return error;
+		}
+	);
 }
 
 const uploadtoInsta = async(url, description)=> {
@@ -111,6 +129,95 @@ const uploadtoInsta = async(url, description)=> {
 	}
 };
 
+const getFBPhotos = async () => {
+    try {
+        const post_ids = await new Promise((resolve, reject) => {
+            // Get all Post IDs
+            FB.api(
+                '/269151736285799/feed',
+                'GET',
+                {},
+                (response) => {
+                    if (response.error) {
+                        console.log('error occurred: ');
+                        console.log(response.error);
+                        reject(response.error);
+                    } else {
+                        resolve(response.data);
+                    }
+                }
+            );
+        });
+
+        const posts = await Promise.all(post_ids.map(async (post) => {
+            console.log(post.id);
+            try {
+                const postResponse = await new Promise((resolve, reject) => {
+                    // Get post details
+                    FB.api(
+                        `/${post.id}`,
+                        'GET',
+                        { "fields": "attachments, likes.summary(true), comments.summary(true)" },
+                        (response) => {
+                            if (response.error) {
+                                console.log('error occurred: ');
+                                console.log(response.error);
+                                reject(response.error);
+                            } else {
+                                resolve(response);
+                            }
+                        }
+                    );
+                });
+                return postResponse.attachments.data[0];
+            } catch (error) {
+                console.log(error);
+                console.log('No Attachments');
+                return null;
+            }
+        }));
+
+        return posts.filter(post => post !== null);
+    } catch (error) {
+        throw error;
+    }
+}
+
+const getFBVideos = async () => {
+	let video_ids = [];
+	let config = {
+		method: 'get',
+		maxBodyLength: Infinity,
+		url: `https://graph-video.facebook.com/v19.0/269151736285799/videos?access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`,
+	};
+	  
+	await axios.request(config)
+	.then((response) => {
+		video_ids = response.data.data;
+	})
+	.catch((error) => {
+		console.log(error);
+	});
+	// call the graph-video api to get the video details the endpoint is /{video-id}?fields=source
+	let videos = [];
+	await Promise.all(video_ids.map(async (video) => {
+		let config = {
+			method: 'get',
+			maxBodyLength: Infinity,
+			url: `https://graph-video.facebook.com/v19.0/${video.id}?fields=source&access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`,
+		};
+		await axios.request(config)
+		.then((response) => {
+			videos.push(response.data);
+		})
+		.catch((error) => {
+			console.log(error);
+		});
+	}));
+	return videos;
+};
+
+
 app.post("/connect-instagram", async (req, res) => {
 	const { username, password } = req.body;
 	ig.state.generateDevice(username);
@@ -122,46 +229,7 @@ app.post("/connect-instagram", async (req, res) => {
 	  res.status(500).json(error);
 	}
   });
-
-app.post("/upload-instagram", async (req, res) => {
-	const { url, caption } = req.body;
-	try {
-		const mediaBuffer = await get({
-			url: url,
-			encoding: null,
-		  });
-		const data = await ig.publish.photo({
-			file: mediaBuffer,
-			caption: caption,
-		});
-
-		res.send(data);
-	} catch (error) {
-	  console.log(error);
-	  res.status(500).json(error);
-	}
-  });
-
-app.post("/upload-video", async (req, res) => {
-	const { url, caption } = req.body;
-	try {
-		const response = await fetch(url); // Download the video using fetch
-		if (!response.ok) {
-			throw new Error(`Failed to fetch video from URL: ${url}`);
-		}
-
-		const videoBuffer = await response.arrayBuffer();
-		const data = await ig.publish.video({
-			video: videoBuffer,
-			caption: caption,
-		});
-		res.send(data);
-	} catch (error) {
-	  console.log(error);
-	  res.status(500).json(error);
-	}
-  });
-
+  
 app.post('/upload', upload.single('image'), async (req, res) => {
 	try {
 		
@@ -194,6 +262,59 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     
 });
 
+app.post('/upload/video', upload.single('video'), async (req, res) => {
+	try {
+		const { description } = req.body;
+		if (!req.file) {
+			return res.status(400).json({ error: "Video file not provided" });
+		}
+		const video = req.file;
+		// upload to cloudinary
+		let url = '';
+		await cloudinary.uploader.upload(video.path,
+			{
+				resource_type: "video",
+			},
+			async (error, result) => {
+			if (error) {
+				console.error("Cloud error", error);
+				return res.status(500).json(error);
+			}
+			console.log(result);
+			url = result.secure_url;
+			// upload to facebook
+			await uploadtoFbVideo(url, description);
+			// upload to instagram
+			// await uploadtoInsta(url, description, video.Buffer);
+
+			return res.status(200).json({ message: "Video uploaded successfully", video: result });
+		});
+	} catch (error) {
+		console.error(error);
+		res.status(500).json(error);
+	}
+});
+
+app.get('/fb-posts', async (req, res) => {
+	try {
+		const posts = await getFBPhotos();
+		return res.status(200).json(posts);
+	} catch {
+		return res.status(500).json({ error: "Error getting Facebook posts" });
+	}
+});
+
+app.get('/fb-videos', async (req, res) => {
+	try {
+		const posts = await getFBVideos();
+		return res.status(200).json(posts);
+	} catch {
+		return res.status(500).json({ error: "Error getting Facebook videos" });
+	}
+});
+
+
+// Connect to Instagram
 const username = 'mpr_123456';
 const password = 'abc@123';
 
