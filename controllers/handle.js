@@ -82,7 +82,6 @@ const uploadVideoToYoutube = async (path, description) => {
         const client = await createOAuth(handle.accessToken, handle.refreshToken);
         const youtube = await createYoutubeClient(client);
         const channels = await channelList(youtube);
-        const playlists = await playlistList(youtube, channels.data.items[0].id);
         const video = {
             snippet: {
                 title: "Test Video",
