@@ -346,11 +346,12 @@ app.post('/generate-caption', upload.single('image'),async (req, res) => {
 				console.error(error);
 				return res.status(500).json(error);
 			}
-			console.log(result);
+
 			url = result.secure_url;
+
 			// generate caption
-			const caption = await imagetToCaption(url);
-			return res.status(200).json({ caption });
+			const captions = await imagetToCaption(url);
+			return res.status(200).json({ captions: captions });
 		})
 	} catch (error) {
 		console.error(error);

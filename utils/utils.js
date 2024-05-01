@@ -86,7 +86,7 @@ const imagetToCaption = async (imageURL) => {
 				'role': 'user',
 				'parts': [
 					{
-						'text': 'Genearate a caption for the given image. It should have some emojis, hashtags and should be catchy, engaging.'
+						'text': 'Genearate 4 captions for the given image. It should have some emojis, hashtags and should be catchy, engaging.'
 					},
 					{
 						'inlineData': {
@@ -107,7 +107,11 @@ const imagetToCaption = async (imageURL) => {
 		}
 	);
 	const caption = response.data.candidates[0].content.parts[0].text;
-	return caption;
+	// extract 4 captions from the response split by '\n' and replace '\t' with ''
+	const captions = caption.split('\n').map(caption => caption.replace('\t', ''));
+	console.log(captions);
+	console.log(caption);
+	return captions;
 }
 
 exports.sendEmail = sendEmail
