@@ -107,8 +107,8 @@ const imagetToCaption = async (imageURL) => {
 		}
 	);
 	const caption = response.data.candidates[0].content.parts[0].text;
-	// extract 4 captions from the response split by '\n' and replace '\t' with ''
-	const captions = caption.split('\n').map(caption => caption.replace('\t', ''));
+	// extract 4 captions from the response split by '\n' and replace '\t' with '' remove 1./2./3./4. from the start of the caption
+	const captions = caption.split('\n').map(caption => caption.replace('\t', '').replace(/^\d+\./, '').trim());
 	console.log(captions);
 	console.log(caption);
 	return captions;
