@@ -169,10 +169,8 @@ const getFBPhotos = async () => {
                         }
                     );
                 });
-                return postResponse.attachments.data[0];
+                return postResponse;
             } catch (error) {
-                console.log(error);
-                console.log('No Attachments');
                 return null;
             }
         }));
