@@ -27,7 +27,6 @@ const ytCallBack = async (req, res) => {
     try {
         let tokens = await getToken(code);
         console.log("tokens", tokens);
-        
         try {
             console.log("userId", userId);
             const user = await User.findById(userId);
@@ -68,7 +67,49 @@ const getYT = async (req, res) => {
     const youtube = await createYoutubeClient(client);
     const channels = await channelList(youtube);
     const playlists = await playlistList(youtube, channels.data.items[0].id);
-    return res.status(200).json({ data: playlists });
+    const playlistItems = await playlistItemsList(youtube, playlists.data.items[0].id);
+
+    return res.status(200).json({ data: playlistItems.data.items });
+}
+
+const uploadVideoToYoutube = async (path, description) => {
+    try{
+        const handle = await HandleConfig.findOne({ userId: "65d0bab01024462089dedceb", serviceName: "youtube" });
+        if (!handle) {
+            return res.status(400).json({ message: "Youtube not connected" });
+        }
+
+        const client = await createOAuth(handle.accessToken, handle.refreshToken);
+        const youtube = await createYoutubeClient(client);
+        const channels = await channelList(youtube);
+        const playlists = await playlistList(youtube, channels.data.items[0].id);
+        const video = {
+            snippet: {
+                title: "Test Video",
+                description: description,
+                tags: ["test", "video"],
+                categoryId: "22",
+            },
+            status: {
+                privacyStatus: "public"
+            }
+        }
+        const videoPath = path;
+        const videoUpload = await youtube.videos.insert(
+            {
+                part: "snippet,status",
+                requestBody: video,
+                media: {
+                    body: require("fs").createReadStream(videoPath)
+                }
+            }
+        );
+        console.log("Uploaded to Youtube");
+        return "video uploaded";
+    } catch (error) {
+        console.log("error", error);
+        return error.message;
+    }
 }
 
 // Reterive all handles(social media accounts) of a user 
@@ -84,5 +125,6 @@ module.exports = {
     generateYTAuthURL, 
     ytCallBack, 
     getYT, 
-    handles 
+    handles,
+    uploadVideoToYoutube
 };

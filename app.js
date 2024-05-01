@@ -10,6 +10,7 @@ const ig = new IgApiClient();
 const fs = require('fs');
 const { gemini, imagetToCaption } = require('./utils/utils');
 const axios = require('axios');
+const { uploadVideoToYoutube } = require('./controllers/handle');
 
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
@@ -73,8 +74,7 @@ const uploadtoFb = async(url, description)=> {
     FB.api(`/61558529695873/photos`, 'POST', 
     {
         // 'source': fs.createReadStream("PATH_TO_THE_LOCAL_FILE"),
-            "url":`${url}`,
-    
+        "url":`${url}`,
         'caption': `${description}`,
         // 'alt_text_custom': 'Ceci est une alt description',
         //'tag': [{'x':, 'y', 'tag_uid, tag_text'}]
@@ -113,6 +113,23 @@ const uploadtoFbVideo = async(url, description)=> {
 }
 
 const uploadtoInsta = async(url, description)=> {
+	try {
+		const mediaBuffer = await get({
+			url: url,
+			encoding: null,
+		});
+		const data = await ig.publish.photo({
+			file: mediaBuffer,
+			caption: description,
+		});
+		console.log("Uploaded to Instagram");
+		return data;
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+const uploadVideoToInsta = async (url, description) => {
 	try {
 		const mediaBuffer = await get({
 			url: url,
@@ -285,8 +302,9 @@ app.post('/upload/video', upload.single('video'), async (req, res) => {
 			url = result.secure_url;
 			// upload to facebook
 			await uploadtoFbVideo(url, description);
+			await uploadVideoToYoutube(video.path, description);
 			// upload to instagram
-			// await uploadtoInsta(url, description, video.Buffer);
+			// await uploadToInstagram(url, description);
 
 			return res.status(200).json({ message: "Video uploaded successfully", video: result });
 		});
@@ -347,16 +365,6 @@ app.post('/generate-caption', upload.single('image'),async (req, res) => {
 // Connect to Instagram
 const username = 'mpr_123456';
 const password = 'abc@123';
-
-(async () => {
-  try {
-    await ig.state.generateDevice(username);
-    await ig.account.login(username, password);
-    console.log('Connected to Instagram successfully.');
-  } catch (error) {
-    console.error('Failed to connect to Instagram:', error);
-  }
-})();
 
 // Start the server
 const PORT = process.env.PORT || port;
