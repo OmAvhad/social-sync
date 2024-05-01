@@ -8,12 +8,12 @@ const { IgApiClient } = require('instagram-private-api');
 const multer = require('multer');
 const ig = new IgApiClient();
 const fs = require('fs');
-const { gemini } = require('./utils/utils');
+const { gemini, imagetToCaption } = require('./utils/utils');
 const axios = require('axios');
 
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
-          
+
 cloudinary.config({ 
   cloud_name: 'dxah0hqjk', 
   api_key: '191772646316441', 
@@ -136,7 +136,7 @@ const getFBPhotos = async () => {
             FB.api(
                 '/269151736285799/feed',
                 'GET',
-                {},
+                { "fields": "message" },
                 (response) => {
                     if (response.error) {
                         console.log('error occurred: ');
@@ -168,6 +168,10 @@ const getFBPhotos = async () => {
                         }
                     );
                 });
+				// add a new field to the postResponse object
+				postResponse.description = post?.message || "";
+				postResponse.created_at = post?.created_time || "";
+				console.log(postResponse);
                 return postResponse;
             } catch (error) {
                 return null;
@@ -309,6 +313,35 @@ app.get('/fb-videos', async (req, res) => {
 		return res.status(500).json({ error: "Error getting Facebook videos" });
 	}
 });
+
+
+// generate caption
+app.post('/generate-caption', upload.single('image'),async (req, res) => {
+	try {
+		if (!req.file) {
+			return res.status(400).json({ error: "Image file not provided" });
+		}
+		const image = req.file;
+		// upload to cloudinary
+		let url = '';
+		await cloudinary.uploader.upload(image.path, async (error, result) => {
+			if (error) {
+				console.error(error);
+				return res.status(500).json(error);
+			}
+			console.log(result);
+			url = result.secure_url;
+			// generate caption
+			const caption = await imagetToCaption(url);
+			return res.status(200).json({ caption });
+		})
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json(error);
+	}
+});
+
+
 
 
 // Connect to Instagram

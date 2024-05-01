@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const axios = require("axios");
+const fs = require("fs");
 require("dotenv").config();
 
 const geminiAPIKey = process.env.GEMINI_API_KEY;
@@ -42,6 +43,7 @@ const sendEmail = async (email, subject, message, resumeBuffer) => {
 	});
 };
 
+
 const gemini = async (myText, myFunction) => {
 	const response = await axios.post(
 		'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
@@ -73,33 +75,41 @@ const gemini = async (myText, myFunction) => {
 	return args;
 }
 
+// gemini function to send image to gemini and generate caption
+const imagetToCaption = async (imageURL) => {
+	const imageData = await axios.get(imageURL, { responseType: 'arraybuffer' }).then(response => Buffer.from(response.data, 'binary').toString('base64'));
+
+	const response = await axios.post(
+		'https://generativelanguage.googleapis.com/v1/models/gemini-pro-vision:generateContent',
+		{
+			'contents': {
+				'role': 'user',
+				'parts': [
+					{
+						'text': 'Genearate a caption for the given image. It should have some emojis, hashtags and should be catchy, engaging.'
+					},
+					{
+						'inlineData': {
+							mimeType: 'image/jpeg',
+							data: imageData
+						}
+					}
+				]
+			},
+			},
+			{
+			params: {
+				'key': geminiAPIKey
+			},
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		}
+	);
+	const caption = response.data.candidates[0].content.parts[0].text;
+	return caption;
+}
+
 exports.sendEmail = sendEmail
 exports.gemini = gemini
-
-// Example function for Gemini
-// const goalFunction = {
-// 	'name': 'categorize_goal',
-// 	'description': 'find the goal from the given description, find attributes such as title, amount, end_date, etc.',
-// 	'parameters': {
-// 		'type': 'object',
-// 		'properties': {
-// 				'title': {
-// 					'type': 'string',
-// 					'description': 'Title of the goal such as car, flat, world tour for example: Car, Falt, World Tour'
-// 				},
-// 				'amount': {
-// 					'type': 'number',
-// 					'description': 'How much money will be required to achieve the goal. Consider it to be in INR. Give in Number format For example: 40000, 5000. If not found then return 200000.'
-// 				},
-// 				'end_date': {
-// 					'type': 'string',
-// 					'description': 'The date by which the goal should be achieved, give in ISO format For example: 2022-12-31, 2023-01-01. If not found then give todays date.'
-// 				}
-// 		},
-// 		'required': [
-// 			'title',
-// 			'amount',
-// 			'end_date'
-// 		]
-// 	}
-// }
+exports.imagetToCaption = imagetToCaption
