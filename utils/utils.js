@@ -1,6 +1,6 @@
 const nodemailer = require("nodemailer");
 const axios = require("axios");
-const fs = require("fs");
+const fs = require("fs");	
 require("dotenv").config();
 
 const geminiAPIKey = process.env.GEMINI_API_KEY;
