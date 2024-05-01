@@ -188,7 +188,6 @@ const getFBPhotos = async () => {
 				// add a new field to the postResponse object
 				postResponse.description = post?.message || "";
 				postResponse.created_at = post?.created_time || "";
-				console.log(postResponse);
                 return postResponse;
             } catch (error) {
                 return null;
@@ -259,7 +258,8 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 		console.log(image, typeof(image));
 		// upload to cloudinary
 		let url = '';
-		await cloudinary.uploader.upload(image.path, async (error, result) => {
+		await cloudinary.uploader.upload(image.path, 
+			async (error, result) => {
 			if (error) {
 				console.error(error);
 				return res.status(500).json(error);
@@ -276,8 +276,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
 	} catch (error) {
 		console.error(error);
 		res.status(500).json(error);
-	}
-    
+	} 
 });
 
 app.post('/upload/video', upload.single('video'), async (req, res) => {
