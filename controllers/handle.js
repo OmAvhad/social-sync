@@ -32,7 +32,7 @@ const ytCallBack = async (req, res) => {
             console.log("userId", userId);
             const user = await User.findById(userId);
             if (!user) {
-                return res.status(400).json({ message: "User not found" });
+                return res.status(400).json({ message: "User not found", userId: userId });
             }
             console.log("tokens", tokens);
             await HandleConfig.findOneAndUpdate(
