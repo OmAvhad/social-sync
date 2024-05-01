@@ -82,7 +82,7 @@ const uploadVideoToYoutube = async (path, description) => {
         const channels = await channelList(youtube);
         const video = {
             snippet: {
-                title: "Test Video",
+                title: description,
                 description: description,
                 tags: ["test", "video"],
                 categoryId: "22",
