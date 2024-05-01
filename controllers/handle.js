@@ -66,10 +66,8 @@ const getYT = async (req, res) => {
     const client = await createOAuth(handle.accessToken, handle.refreshToken);
     const youtube = await createYoutubeClient(client);
     const channels = await channelList(youtube);
-    const playlists = await playlistList(youtube, channels.data.items[0].id);
-    // const playlistItems = await playlistItemsList(youtube, playlists.data.items[0].id);
 
-    return res.status(200).json({ data: playlistItems.data.items });
+    return res.status(200).json({ data: channels });
 }
 
 const uploadVideoToYoutube = async (path, description) => {
