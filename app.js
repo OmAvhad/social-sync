@@ -150,7 +150,6 @@ const getFBPhotos = async () => {
         });
 
         const posts = await Promise.all(post_ids.map(async (post) => {
-            console.log(post.id);
             try {
                 const postResponse = await new Promise((resolve, reject) => {
                     // Get post details
@@ -202,7 +201,7 @@ const getFBVideos = async () => {
 		let config = {
 			method: 'get',
 			maxBodyLength: Infinity,
-			url: `https://graph-video.facebook.com/v19.0/${video.id}?fields=source&access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`,
+			url: `https://graph-video.facebook.com/v19.0/${video.id}?fields=source,likes.summary(true),comments.summary(true)&access_token=${process.env.FACEBOOK_ACCESS_TOKEN}`,
 		};
 		await axios.request(config)
 		.then((response) => {
