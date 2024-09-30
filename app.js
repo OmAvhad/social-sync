@@ -16,9 +16,9 @@ require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({ 
-  cloud_name: 'dxah0hqjk', 
-  api_key: '191772646316441', 
-  api_secret: 'eVPhZnp9eyEFWPtsfD2LkbupLLI' 
+  cloud_name: '', 
+  api_key: '', 
+  api_secret: '' 
 });
 
 const app = express();
